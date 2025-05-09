@@ -18,7 +18,7 @@ canvas {
 }
 
 #toggleMusicBtn,
-#startGameBtn {
+#startGameBtn,#restartGameBtn {
   padding: 8px 12px;
   font-size: 16px;
   cursor: pointer;
