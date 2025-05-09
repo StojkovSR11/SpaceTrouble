@@ -7,11 +7,13 @@
 </head>
 <body>
 
- <button id="startGameBtn">Start Game</button>
- <canvas id="gameCanvas" width="800" height="600"></canvas>
- <button id="toggleMusic">Toggle Music</button>
- <button id="restartGameBtn" style="display:none;">Restart Game</button> <!-- New Restart Button -->
- 
- <script src="game.js" defer></script>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div id="controls">
+    <button id="startGameBtn">Start Game</button>
+    <button id="toggleMusicBtn">Pause Music</button>
+  </div>
+  <button id="restartGameBtn" style="display: none;">Restart Game</button>
+
+  <script src="game.js" defer></script>
 </body>
 </html>

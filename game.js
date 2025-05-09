@@ -23,7 +23,8 @@ bgMusic.volume = 1;
 
 // Game state variables
 let gameStarted = false;
-let musicPlayed = false;  // Flag to track if the music has been played
+let gamePaused = false;
+let musicPlayed = false; // Flag to track if the music has been played
 
 // Function to start the music only after user interaction
 function startMusic() {
@@ -35,15 +36,41 @@ function startMusic() {
   }
 }
 
+// Function to toggle music
+function toggleMusic() {
+  if (bgMusic.paused) {
+    bgMusic.play();
+  } else {
+    bgMusic.pause();
+  }
+}
+
 // Start game logic and play music when button is clicked
 document.getElementById("startGameBtn").addEventListener("click", () => {
   if (!gameStarted) {
-    startMusic(); // Play background music
+    startMusic();
     gameStarted = true;
-    gameLoop(); // Start the game loop
-    startEnemySpawning(); // Start spawning enemies
-    startEnemyShooting(); // Start enemy shooting
-    document.getElementById("startGameBtn").style.display = "none"; // Hide the button after starting the game
+    gameLoop();
+    startEnemySpawning();
+    startEnemyShooting();
+    document.getElementById("startGameBtn").textContent = "Pause";
+    document.getElementById("startGameBtn").blur(); // Prevent spacebar reactivation
+  } else {
+    gamePaused = !gamePaused;
+    if (gamePaused) {
+      document.getElementById("startGameBtn").textContent = "Resume";
+    } else {
+      document.getElementById("startGameBtn").textContent = "Pause";
+      gameLoop();
+    }
+    document.getElementById("startGameBtn").blur(); // Prevent spacebar reactivation
+  }
+});
+
+// Prevent spacebar from triggering focused buttons
+document.addEventListener("keydown", (e) => {
+  if (e.code === "Space" && document.activeElement.tagName === "BUTTON") {
+    e.preventDefault();
   }
 });
 
@@ -65,7 +92,7 @@ const enemies = [];
 const enemyBullets = [];
 
 document.addEventListener("keydown", (e) => {
-  if (gameOver || !gameStarted) return; // Prevent player input if the game is over or hasn't started
+  if (gameOver || !gameStarted || gamePaused) return;
   if (e.key === "ArrowLeft") player.x -= player.speed;
   if (e.key === "ArrowRight") player.x += player.speed;
   if (e.key === " ") shoot();
@@ -101,22 +128,16 @@ function detectCollision(objA, objB) {
 
 function update() {
   if (gameOver) {
-    // Show restart button when game is over
     document.getElementById("restartGameBtn").style.display = "block";
     return;
   }
 
-  // Keep player within bounds
   player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 
-  // Update bullets
   for (let bullet of bullets) bullet.y -= bullet.speed;
   for (let b of enemyBullets) b.y += b.speed;
-
-  // Update enemies
   for (let enemy of enemies) enemy.y += enemy.speed;
 
-  // Remove off-screen bullets
   for (let i = bullets.length - 1; i >= 0; i--) {
     if (bullets[i].y < -10) bullets.splice(i, 1);
   }
@@ -125,7 +146,6 @@ function update() {
     if (enemyBullets[i].y > canvas.height) enemyBullets.splice(i, 1);
   }
 
-  // Bullet-enemy collisions
   for (let i = enemies.length - 1; i >= 0; i--) {
     for (let j = bullets.length - 1; j >= 0; j--) {
       if (detectCollision(bullets[j], enemies[i])) {
@@ -137,7 +157,6 @@ function update() {
     }
   }
 
-  // Enemy-player collisions
   for (let i = enemies.length - 1; i >= 0; i--) {
     const e = enemies[i];
     if (
@@ -152,7 +171,6 @@ function update() {
     }
   }
 
-  // Enemy bullet hits player
   for (let i = enemyBullets.length - 1; i >= 0; i--) {
     const b = enemyBullets[i];
     if (
@@ -173,24 +191,20 @@ function draw() {
 
   ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
 
-  // Draw player bullets
   for (let bullet of bullets) {
     ctx.fillStyle = "yellow";
     ctx.fillRect(bullet.x, bullet.y, 4, 10);
   }
 
-  // Draw enemy bullets
   for (let b of enemyBullets) {
     ctx.fillStyle = "red";
     ctx.fillRect(b.x, b.y, 4, 10);
   }
 
-  // Draw enemies
   for (let enemy of enemies) {
     ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
 
-  // HUD
   ctx.fillStyle = "white";
   ctx.font = "20px Arial";
   ctx.fillText(`Score: ${score}`, 10, 25);
@@ -204,22 +218,21 @@ function draw() {
 }
 
 function gameLoop() {
+  if (gamePaused) return;
   update();
   draw();
   requestAnimationFrame(gameLoop);
 }
 
-// Spawn enemies every 1.5s (only after game starts)
 function startEnemySpawning() {
   setInterval(() => {
-    if (!gameOver) spawnEnemy();
+    if (!gameOver && !gamePaused) spawnEnemy();
   }, 1500);
 }
 
-// Enemies shoot every second (only after game starts)
 function startEnemyShooting() {
   setInterval(() => {
-    if (gameOver) return;
+    if (gameOver || gamePaused) return;
     enemies.forEach(e => {
       if (Math.random() < 0.2) {
         enemyBullets.push({ x: e.x + 22, y: e.y + 48, speed: 4 });
@@ -231,27 +244,25 @@ function startEnemyShooting() {
   }, 1000);
 }
 
-// Restart game logic
 document.getElementById("restartGameBtn").addEventListener("click", restartGame);
 
 function restartGame() {
-  // Reset game state
   player.lives = 3;
   player.x = canvas.width / 2 - 24;
   player.y = canvas.height - 70;
   score = 0;
   gameOver = false;
 
-  // Clear all enemies, bullets, etc.
   enemies.length = 0;
   bullets.length = 0;
   enemyBullets.length = 0;
 
-  // Hide the restart button and show the start button
   document.getElementById("restartGameBtn").style.display = "none";
-  document.getElementById("startGameBtn").style.display = "block";
-
-  // Start the game
-  gameStarted = false;
-  document.getElementById("startGameBtn").style.display = "block";
+  document.getElementById("startGameBtn").textContent = "Pause";
+  document.getElementById("startGameBtn").blur(); // Prevent spacebar reactivation
 }
+
+document.getElementById("toggleMusicBtn").addEventListener("click", () => {
+  toggleMusic();
+  document.getElementById("toggleMusicBtn").textContent = bgMusic.paused ? "Play Music" : "Pause Music";
+});

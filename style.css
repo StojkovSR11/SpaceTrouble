@@ -2,11 +2,26 @@ body {
   margin: 0;
   background: black;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
 }
+
 canvas {
   border: 2px solid white;
   background-color: #111;
+}
+
+#controls {
+  margin-top: 20px;
+}
+
+#toggleMusicBtn,
+#startGameBtn {
+  padding: 8px 12px;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 10;
+  margin: 5px;
 }
