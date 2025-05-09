@@ -16,6 +16,38 @@ const enemyImgs = [
   return img;
 });
 
+// Sounds
+const bgMusic = new Audio("music.mp3");
+bgMusic.loop = true;
+bgMusic.volume = 1;
+
+// Game state variables
+let gameStarted = false;
+let musicPlayed = false;  // Flag to track if the music has been played
+
+// Function to start the music only after user interaction
+function startMusic() {
+  if (!musicPlayed) {
+    bgMusic.play().catch((error) => {
+      console.log("Audio play failed:", error);
+    });
+    musicPlayed = true;
+  }
+}
+
+// Start game logic and play music when button is clicked
+document.getElementById("startGameBtn").addEventListener("click", () => {
+  if (!gameStarted) {
+    startMusic(); // Play background music
+    gameStarted = true;
+    gameLoop(); // Start the game loop
+    startEnemySpawning(); // Start spawning enemies
+    startEnemyShooting(); // Start enemy shooting
+    document.getElementById("startGameBtn").style.display = "none"; // Hide the button after starting the game
+  }
+});
+
+// Player properties
 const player = {
   x: canvas.width / 2 - 24,
   y: canvas.height - 70,
@@ -30,15 +62,19 @@ let gameOver = false;
 
 const bullets = [];
 const enemies = [];
+const enemyBullets = [];
 
 document.addEventListener("keydown", (e) => {
-  if (gameOver) return;
+  if (gameOver || !gameStarted) return; // Prevent player input if the game is over or hasn't started
   if (e.key === "ArrowLeft") player.x -= player.speed;
   if (e.key === "ArrowRight") player.x += player.speed;
   if (e.key === " ") shoot();
 });
 
 function shoot() {
+  const gunSound = new Audio("gun.mp3");
+  gunSound.volume = 0.3;
+  gunSound.play();
   bullets.push({ x: player.x + 22, y: player.y, speed: 7 });
 }
 
@@ -64,18 +100,29 @@ function detectCollision(objA, objB) {
 }
 
 function update() {
-  if (gameOver) return;
+  if (gameOver) {
+    // Show restart button when game is over
+    document.getElementById("restartGameBtn").style.display = "block";
+    return;
+  }
 
   // Keep player within bounds
   player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 
+  // Update bullets
   for (let bullet of bullets) bullet.y -= bullet.speed;
+  for (let b of enemyBullets) b.y += b.speed;
 
+  // Update enemies
   for (let enemy of enemies) enemy.y += enemy.speed;
 
   // Remove off-screen bullets
   for (let i = bullets.length - 1; i >= 0; i--) {
     if (bullets[i].y < -10) bullets.splice(i, 1);
+  }
+
+  for (let i = enemyBullets.length - 1; i >= 0; i--) {
+    if (enemyBullets[i].y > canvas.height) enemyBullets.splice(i, 1);
   }
 
   // Bullet-enemy collisions
@@ -101,9 +148,22 @@ function update() {
     ) {
       enemies.splice(i, 1);
       player.lives -= 1;
-      if (player.lives <= 0) {
-        gameOver = true;
-      }
+      if (player.lives <= 0) gameOver = true;
+    }
+  }
+
+  // Enemy bullet hits player
+  for (let i = enemyBullets.length - 1; i >= 0; i--) {
+    const b = enemyBullets[i];
+    if (
+      b.x < player.x + player.width &&
+      b.x + 4 > player.x &&
+      b.y < player.y + player.height &&
+      b.y + 10 > player.y
+    ) {
+      enemyBullets.splice(i, 1);
+      player.lives -= 1;
+      if (player.lives <= 0) gameOver = true;
     }
   }
 }
@@ -113,11 +173,19 @@ function draw() {
 
   ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
 
+  // Draw player bullets
   for (let bullet of bullets) {
     ctx.fillStyle = "yellow";
     ctx.fillRect(bullet.x, bullet.y, 4, 10);
   }
 
+  // Draw enemy bullets
+  for (let b of enemyBullets) {
+    ctx.fillStyle = "red";
+    ctx.fillRect(b.x, b.y, 4, 10);
+  }
+
+  // Draw enemies
   for (let enemy of enemies) {
     ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
@@ -141,8 +209,49 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-setInterval(() => {
-  if (!gameOver) spawnEnemy();
-}, 1500);
+// Spawn enemies every 1.5s (only after game starts)
+function startEnemySpawning() {
+  setInterval(() => {
+    if (!gameOver) spawnEnemy();
+  }, 1500);
+}
 
-gameLoop();
+// Enemies shoot every second (only after game starts)
+function startEnemyShooting() {
+  setInterval(() => {
+    if (gameOver) return;
+    enemies.forEach(e => {
+      if (Math.random() < 0.2) {
+        enemyBullets.push({ x: e.x + 22, y: e.y + 48, speed: 4 });
+        const laser = new Audio("laser.mp3");
+        laser.volume = 0.3;
+        laser.play();
+      }
+    });
+  }, 1000);
+}
+
+// Restart game logic
+document.getElementById("restartGameBtn").addEventListener("click", restartGame);
+
+function restartGame() {
+  // Reset game state
+  player.lives = 3;
+  player.x = canvas.width / 2 - 24;
+  player.y = canvas.height - 70;
+  score = 0;
+  gameOver = false;
+
+  // Clear all enemies, bullets, etc.
+  enemies.length = 0;
+  bullets.length = 0;
+  enemyBullets.length = 0;
+
+  // Hide the restart button and show the start button
+  document.getElementById("restartGameBtn").style.display = "none";
+  document.getElementById("startGameBtn").style.display = "block";
+
+  // Start the game
+  gameStarted = false;
+  document.getElementById("startGameBtn").style.display = "block";
+}
