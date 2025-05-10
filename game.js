@@ -85,6 +85,20 @@ const player = {
   lives: 3
 };
 
+const stars = [];
+const numberOfStars = 100;
+
+// Initialize stars
+for (let i = 0; i < numberOfStars; i++) {
+  stars.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    radius: Math.random() * 1.5 + 0.5,
+    speed: Math.random() * 0.5 + 0.2
+  });
+}
+
+
 let score = 0;
 let gameOver = false;
 
@@ -128,6 +142,15 @@ function detectCollision(objA, objB) {
 }
 
 function update() {
+
+    for (let star of stars) {
+  star.y += star.speed;
+  if (star.y > canvas.height) {
+    star.y = 0;
+    star.x = Math.random() * canvas.width;
+  }
+}
+
   if (gameOver) {
     document.getElementById("restartGameBtn").style.display = "block";
     return;
@@ -213,7 +236,18 @@ function update() {
 }
 
 function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "black";
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+ctx.fillStyle = "white";
+for (let star of stars) {
+  ctx.beginPath();
+  ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+  
 
   ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
 
