@@ -530,51 +530,43 @@ function gameLoop() {
   requestAnimationFrame(gameLoop);
 }
 
-function startEnemySpawning() {
-  let spawnInterval = 5000;         // time between each *group* spawn
-  const minInterval = 5000;
-  const intervalStep = 100;
+let spawnInterval = 5000;
+const minInterval = 5000;
+const intervalStep = 100;
 
-  let spawnCount = 0;
-  let enemiesPerCycle = 1;          // start with 5 per cycle
-  const maxEnemiesPerCycle = 15;
-  const increaseEvery = 3;          // increase group size every 3 cycles
-
-  let timerId = null;
+let spawnCount = 0;
+let enemiesPerCycle = 1;
+const maxEnemiesPerCycle = 15;
+const increaseEvery = 3;
 
 let spawnCycleCount = 0;
+let timerId = null;
 
-function scheduleNext() {
-  timerId = setTimeout(() => {
-    if (!gameOver && !gamePaused) {
-      // spawn a group of enemies
-      for (let i = 0; i < enemiesPerCycle; i++) {
-        spawnEnemy();
-        spawnCount++;
+function startEnemySpawning() {
+  function scheduleNext() {
+    timerId = setTimeout(() => {
+      if (!gameOver && !gamePaused) {
+        for (let i = 0; i < enemiesPerCycle; i++) {
+          spawnEnemy();
+          spawnCount++;
+        }
+
+        spawnCycleCount++;
+
+        spawnInterval = Math.max(minInterval, spawnInterval - intervalStep);
+        console.log(`Cycle ${spawnCycleCount}: Spawned ${enemiesPerCycle} enemies. Next in ${spawnInterval}ms`);
+
+        if (spawnCycleCount % increaseEvery === 0 && enemiesPerCycle < maxEnemiesPerCycle) {
+          enemiesPerCycle++;
+          console.log(`Increasing enemies per cycle to ${enemiesPerCycle}`);
+        }
       }
 
-      spawnCycleCount++;
+      scheduleNext();
+    }, spawnInterval);
+  }
 
-      // difficulty increases over time
-      spawnInterval = Math.max(minInterval, spawnInterval - intervalStep);
-      console.log(`Cycle ${spawnCycleCount}: Spawned ${enemiesPerCycle} enemies. Next in ${spawnInterval}ms`);
-
-      // increase enemies per cycle every few cycles
-      if (spawnCycleCount % increaseEvery === 0 && enemiesPerCycle < maxEnemiesPerCycle) {
-        enemiesPerCycle++;
-        console.log(`Increasing enemies per cycle to ${enemiesPerCycle}`);
-      }
-    }
-
-    // schedule next cycle
-    scheduleNext();
-  }, spawnInterval);
-}
-
-scheduleNext();
-
-return () => clearTimeout(timerId);
-
+  scheduleNext();
 }
 
 
@@ -608,16 +600,30 @@ function restartGame() {
   score = 0;
   gameOver = false;
 
-   playerImg.src = "spaceship_0_0.png";
+  playerImg.src = "spaceship_0_0.png";
 
   enemies.length = 0;
   bullets.length = 0;
   enemyBullets.length = 0;
 
+  // Clear the previous spawn cycle by stopping the timer
+  if (timerId !== null) {
+    clearTimeout(timerId);
+  }
+
+  // Reset variables for enemy spawning
+  spawnInterval = 5000;
+  spawnCount = 0;
+  enemiesPerCycle = 1;
+  spawnCycleCount = 0;
+
+  // Start the new enemy spawn cycle
+  startEnemySpawning();
+
   document.getElementById("restartGameBtn").style.display = "none";
   document.getElementById("startGameBtn").style.display = "block";
   document.getElementById("startGameBtn").textContent = "Pause";
-  document.getElementById("startGameBtn").blur(); // Prevent spacebar reactivation
+  document.getElementById("startGameBtn").blur();
 }
 
 document.getElementById("toggleMusicBtn").addEventListener("click", () => {
