@@ -145,8 +145,8 @@ document.addEventListener("keyup", (e) => {
 const player = {
   x: canvas.width / 2 - 24,
   y: canvas.height - 70,
-  width: 48,
-  height: 48,
+  width: 72,
+  height: 72,
   speed: 7, // Increased player movement speed
   lives: 3
 };
