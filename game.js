@@ -194,7 +194,7 @@ function shoot() {
   const gunSound = new Audio("gun.mp3");
   gunSound.volume = 0.3;
   gunSound.play();
-  bullets.push({ x: player.x + 22, y: player.y, speed: 7 });
+  bullets.push({ x: player.x + 33, y: player.y, speed: 7 });
 }
 
 function spawnEnemy() {
