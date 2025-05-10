@@ -68,12 +68,33 @@ document.getElementById("startGameBtn").addEventListener("click", () => {
   }
 });
 
-// Prevent spacebar from triggering focused buttons
 document.addEventListener("keydown", (e) => {
+  // Prevent spacebar from triggering buttons
   if (e.code === "Space" && document.activeElement.tagName === "BUTTON") {
     e.preventDefault();
   }
+
+  // Exit early if the game is over or hasn't started
+  if (gameOver || !gameStarted) return;
+
+  // Player movement and shooting
+  if (e.key === "ArrowLeft") player.x -= player.speed;
+  if (e.key === "ArrowRight") player.x += player.speed;
+  if (e.key === " ") shoot();
+
+  // Toggle pause with P key
+  if (e.key.toLowerCase() === "p") {
+    gamePaused = !gamePaused;
+    if (!gamePaused) {
+      gameLoop(); // Restart the game loop if not paused
+    }
+
+    const startBtn = document.getElementById("startGameBtn");
+    startBtn.textContent = gamePaused ? "Resume" : "Pause"; // Update button text
+    startBtn.blur(); // Remove focus to prevent spacebar reactivation
+  }
 });
+
 
 // Player properties
 const player = {
@@ -106,12 +127,7 @@ const bullets = [];
 const enemies = [];
 const enemyBullets = [];
 
-document.addEventListener("keydown", (e) => {
-  if (gameOver || !gameStarted || gamePaused) return;
-  if (e.key === "ArrowLeft") player.x -= player.speed;
-  if (e.key === "ArrowRight") player.x += player.speed;
-  if (e.key === " ") shoot();
-});
+
 
 function shoot() {
   const gunSound = new Audio("gun.mp3");
