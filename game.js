@@ -575,20 +575,27 @@ function startEnemyShooting() {
   setInterval(() => {
     if (gameOver || gamePaused) return;
 
+    // Calculate dynamic shooting probability
+    const baseProbability = 0.01;
+    const additionalProbability = Math.floor(score / 200) * 0.0005; // Increase more slowly, every 200 points
+    const shootProbability = Math.min(baseProbability + additionalProbability, 0.1); // Cap at 10%
+
     enemies.forEach(e => {
       const isOnScreen =
         e.x >= 0 && e.x <= canvas.width &&
         e.y >= 0 && e.y <= canvas.height;
 
-      if (isOnScreen && Math.random() < 0.7) {
+      if (isOnScreen && Math.random() < shootProbability) {
         enemyBullets.push({ x: e.x + 22, y: e.y + 48, speed: 5 });
         const laser = new Audio("laser.mp3");
         laser.volume = 0.1;
         laser.play();
       }
     });
-  }, 1000);
+  }, 10);
 }
+
+
 
 
 document.getElementById("restartGameBtn").addEventListener("click", restartGame);
