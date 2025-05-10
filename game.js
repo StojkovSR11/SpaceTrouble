@@ -168,9 +168,11 @@ function spawnEnemy() {
     width: 48,
     height: 48,
     speed: 2 + Math.random() * 1.5,
+    direction: Math.random() > 0.5 ? 1 : -1, // Random direction, 1 for right, -1 for left
     img: img
   });
 }
+
 
 function detectCollision(objA, objB) {
   return (
@@ -203,7 +205,14 @@ function update() {
 
   for (let bullet of bullets) bullet.y -= bullet.speed;
   for (let b of enemyBullets) b.y += b.speed;
-  for (let enemy of enemies) enemy.y += enemy.speed;
+  for (let enemy of enemies) {
+    // Move enemies in a zigzag pattern
+    enemy.x += enemy.direction * 2; // Change 2 for speed of horizontal movement
+    if (enemy.x <= 0 || enemy.x >= canvas.width - enemy.width) {
+      enemy.direction *= -1; // Reverse direction when hitting the screen edges
+    }
+    enemy.y += enemy.speed;
+  }
 
   for (let i = bullets.length - 1; i >= 0; i--) {
     if (bullets[i].y < -10) bullets.splice(i, 1);
@@ -273,6 +282,7 @@ function update() {
     }
   }
 }
+
 
 function draw() {
   ctx.fillStyle = "black";
