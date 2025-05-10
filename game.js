@@ -21,6 +21,7 @@ const bgMusic = new Audio("music.mp3");
 bgMusic.loop = true;
 bgMusic.volume = 1;
 
+
 // Game state variables
 let gameStarted = false;
 let gamePaused = false;
@@ -152,6 +153,9 @@ function update() {
         enemies.splice(i, 1);
         bullets.splice(j, 1);
         score += 100;
+        const enemyExplosion = new Audio("enemyexplosion.mp3");
+        enemyExplosion.volume = 0.8;
+        enemyExplosion.play();
         break;
       }
     }
@@ -167,7 +171,18 @@ function update() {
     ) {
       enemies.splice(i, 1);
       player.lives -= 1;
-      if (player.lives <= 0) gameOver = true;
+      const playerRicochet = new Audio("ricochet.mp3");
+      const playerExplosion = new Audio("playerexplosion.mp3");
+        if (player.lives <= 0) {
+        gameOver = true;
+        
+        playerExplosion.volume = 1.0;
+        playerExplosion.play();
+        }else{
+            playerRicochet.volume = 0.5;
+            playerRicochet.play();
+        }
+
     }
   }
 
@@ -181,7 +196,18 @@ function update() {
     ) {
       enemyBullets.splice(i, 1);
       player.lives -= 1;
-      if (player.lives <= 0) gameOver = true;
+      const playerRicochet = new Audio("ricochet.mp3");
+      const playerExplosion = new Audio("playerexplosion.mp3");
+        if (player.lives <= 0) {
+        gameOver = true;
+        
+        playerExplosion.volume = 1.0;
+        playerExplosion.play();
+        }else{
+            playerRicochet.volume = 0.5;
+            playerRicochet.play();
+        }
+
     }
   }
 }
