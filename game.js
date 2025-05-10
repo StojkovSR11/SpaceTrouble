@@ -312,9 +312,14 @@ function update() {
 
 
 function draw() {
+  // Clear the entire canvas before redrawing
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw the background
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Draw stars (if any)
   ctx.fillStyle = "white";
   for (let star of stars) {
     ctx.beginPath();
@@ -322,45 +327,54 @@ function draw() {
     ctx.fill();
   }
 
+  // Draw the player
   ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
 
+  // Draw bullets
   for (let bullet of bullets) {
     ctx.fillStyle = "yellow";
     ctx.fillRect(bullet.x, bullet.y, 4, 10);
   }
 
+  // Draw enemy bullets
   for (let b of enemyBullets) {
     ctx.fillStyle = "red";
     ctx.fillRect(b.x, b.y, 4, 10);
   }
 
+  // Draw enemies
   for (let enemy of enemies) {
     ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
 
-  // Display score and lives only if the game is not over
-  if (!gameOver) {
-    ctx.fillStyle = "#ff7e5f";  // Set color for score and lives
-    ctx.font = "20px Arial";
-    ctx.fillText(`Score: ${score}`, 10, 25);
-    ctx.fillText(`Lives: ${player.lives}`, 10, 50);
-  }
+  // Fixed position for score and lives (without textAlign and textBaseline)
+  const scoreX = 40;
+  const scoreY = 25;
+  const livesX = 40;
+  const livesY = 50;
 
+  // Set color for score and lives
+  ctx.fillStyle = "#ff7e5f";  
+
+  // Draw score and lives
+  ctx.font = "20px Arial";
+  ctx.fillText(`Score: ${score}`, scoreX, scoreY);
+  ctx.fillText(`Lives: ${player.lives}`, livesX, livesY);
+
+  // Display game over screen when the game ends
   if (gameOver) {
-    // Show total score when the game is over
+    // GAME OVER screen
     ctx.fillStyle = "#ff7e5f";
     ctx.font = "48px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 40);  // Move GAME OVER text slightly up
+    ctx.textAlign = "center";  // Centered for GAME OVER text
+    ctx.textBaseline = "middle";  // Middle aligned for GAME OVER text
+    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 40);
 
-    // Display the total score at the bottom of the screen
+    // Display total score when game ends
     ctx.font = "30px Arial";
-    ctx.fillText(`Total Score: ${score}`, canvas.width / 2, canvas.height / 2 + 40);  // Show total score below GAME OVER
+    ctx.fillText(`Total Score: ${score}`, canvas.width / 2, canvas.height / 2 + 40);
   }
 }
-
-
 
 
 
