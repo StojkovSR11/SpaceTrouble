@@ -21,7 +21,6 @@ const bgMusic = new Audio("music.mp3");
 bgMusic.loop = true;
 bgMusic.volume = 1;
 
-
 // Game state variables
 let gameStarted = false;
 let gamePaused = false;
@@ -68,19 +67,31 @@ document.getElementById("startGameBtn").addEventListener("click", () => {
   }
 });
 
+let keysPressed = {
+  left: false,
+  right: false,
+  space: false
+};
+
 document.addEventListener("keydown", (e) => {
-  // Prevent spacebar from triggering buttons
-  if (e.code === "Space" && document.activeElement.tagName === "BUTTON") {
-    e.preventDefault();
+  // Handle movement (Arrow keys should not block each other)
+  if (e.key === "ArrowLeft") {
+    keysPressed.left = true;
+  }
+  if (e.key === "ArrowRight") {
+    keysPressed.right = true;
   }
 
-  // Exit early if the game is over or hasn't started
-  if (gameOver || !gameStarted) return;
-
-  // Player movement and shooting
-  if (e.key === "ArrowLeft") player.x -= player.speed;
-  if (e.key === "ArrowRight") player.x += player.speed;
-  if (e.key === " ") shoot();
+  // Handle shooting (spacebar should only trigger once)
+  if (e.key === " " && !keysPressed.space) {
+    const currentTime = Date.now();
+    if (currentTime - lastShotTime > shootCooldown) {
+      shoot();
+      lastShotTime = currentTime;
+      keysPressed.space = true;  // Lock shooting until spacebar is released
+    }
+    e.preventDefault();  // Prevent default spacebar behavior (scroll, etc)
+  }
 
   // Toggle pause with P key
   if (e.key.toLowerCase() === "p") {
@@ -95,6 +106,18 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+document.addEventListener("keyup", (e) => {
+  // Reset movement and shooting states on key release
+  if (e.key === "ArrowLeft") {
+    keysPressed.left = false;
+  }
+  if (e.key === "ArrowRight") {
+    keysPressed.right = false;
+  }
+  if (e.key === " ") {
+    keysPressed.space = false;  // Allow shooting again when spacebar is released
+  }
+});
 
 // Player properties
 const player = {
@@ -102,7 +125,7 @@ const player = {
   y: canvas.height - 70,
   width: 48,
   height: 48,
-  speed: 5,
+  speed: 7, // Increased player movement speed
   lives: 3
 };
 
@@ -119,7 +142,6 @@ for (let i = 0; i < numberOfStars; i++) {
   });
 }
 
-
 let score = 0;
 let gameOver = false;
 
@@ -127,7 +149,9 @@ const bullets = [];
 const enemies = [];
 const enemyBullets = [];
 
-
+// Shooting cooldown
+let lastShotTime = 0;
+const shootCooldown = 100; // Cooldown time in milliseconds (500ms)
 
 function shoot() {
   const gunSound = new Audio("gun.mp3");
@@ -158,14 +182,17 @@ function detectCollision(objA, objB) {
 }
 
 function update() {
+  // Move player based on keys pressed
+  if (keysPressed.left) player.x -= player.speed;
+  if (keysPressed.right) player.x += player.speed;
 
-    for (let star of stars) {
-  star.y += star.speed;
-  if (star.y > canvas.height) {
-    star.y = 0;
-    star.x = Math.random() * canvas.width;
+  for (let star of stars) {
+    star.y += star.speed;
+    if (star.y > canvas.height) {
+      star.y = 0;
+      star.x = Math.random() * canvas.width;
+    }
   }
-}
 
   if (gameOver) {
     document.getElementById("restartGameBtn").style.display = "block";
@@ -212,16 +239,14 @@ function update() {
       player.lives -= 1;
       const playerRicochet = new Audio("ricochet.mp3");
       const playerExplosion = new Audio("playerexplosion.mp3");
-        if (player.lives <= 0) {
+      if (player.lives <= 0) {
         gameOver = true;
-        
         playerExplosion.volume = 1.0;
         playerExplosion.play();
-        }else{
-            playerRicochet.volume = 0.5;
-            playerRicochet.play();
-        }
-
+      } else {
+        playerRicochet.volume = 0.5;
+        playerRicochet.play();
+      }
     }
   }
 
@@ -237,33 +262,28 @@ function update() {
       player.lives -= 1;
       const playerRicochet = new Audio("ricochet.mp3");
       const playerExplosion = new Audio("playerexplosion.mp3");
-        if (player.lives <= 0) {
+      if (player.lives <= 0) {
         gameOver = true;
-        
         playerExplosion.volume = 1.0;
         playerExplosion.play();
-        }else{
-            playerRicochet.volume = 0.5;
-            playerRicochet.play();
-        }
-
+      } else {
+        playerRicochet.volume = 0.5;
+        playerRicochet.play();
+      }
     }
   }
 }
 
 function draw() {
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "black";
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-ctx.fillStyle = "white";
-for (let star of stars) {
-  ctx.beginPath();
-  ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-  
+  ctx.fillStyle = "white";
+  for (let star of stars) {
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
 
