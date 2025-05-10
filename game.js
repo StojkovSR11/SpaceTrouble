@@ -74,6 +74,8 @@ let keysPressed = {
 };
 
 document.addEventListener("keydown", (e) => {
+  if (gameOver) return; // Prevent any input if the game is over
+  
   // Handle movement (Arrow keys should not block each other)
   if (e.key === "ArrowLeft") {
     keysPressed.left = true;
@@ -107,6 +109,8 @@ document.addEventListener("keydown", (e) => {
 });
 
 document.addEventListener("keyup", (e) => {
+   // Prevent any input if the game is over
+  
   // Reset movement and shooting states on key release
   if (e.key === "ArrowLeft") {
     keysPressed.left = false;
@@ -118,6 +122,7 @@ document.addEventListener("keyup", (e) => {
     keysPressed.space = false;  // Allow shooting again when spacebar is released
   }
 });
+
 
 // Player properties
 const player = {
@@ -248,10 +253,12 @@ function update() {
       player.lives -= 1;
       const playerRicochet = new Audio("ricochet.mp3");
       const playerExplosion = new Audio("playerexplosion.mp3");
+      
       if (player.lives <= 0) {
         gameOver = true;
         playerExplosion.volume = 1.0;
         playerExplosion.play();
+        playerImg.src = ""
       } else {
         playerRicochet.volume = 0.5;
         playerRicochet.play();
@@ -271,10 +278,12 @@ function update() {
       player.lives -= 1;
       const playerRicochet = new Audio("ricochet.mp3");
       const playerExplosion = new Audio("playerexplosion.mp3");
+      
       if (player.lives <= 0) {
         gameOver = true;
         playerExplosion.volume = 1.0;
         playerExplosion.play();
+        playerImg.src = ""
       } else {
         playerRicochet.volume = 0.5;
         playerRicochet.play();
@@ -358,6 +367,8 @@ function restartGame() {
   player.y = canvas.height - 70;
   score = 0;
   gameOver = false;
+
+   playerImg.src = "spaceship_0_0.png";
 
   enemies.length = 0;
   bullets.length = 0;
