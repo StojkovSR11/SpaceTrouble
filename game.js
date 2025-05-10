@@ -5,6 +5,21 @@ const ctx = canvas.getContext("2d");
 const playerImg = new Image();
 playerImg.src = "spaceship_0_0.png";
 
+const explosionFrames = [];
+for (let i = 1; i <= 34; i++) {
+  const img = new Image();
+  img.src = `explosion/img_${i}.png`; // New format
+  explosionFrames.push(img);
+}
+
+
+let explosionFrameIndex = 0;
+let explosionInProgress = false;
+let explosionX = 0;
+let explosionY = 0;
+const enemyExplosions = []; // Array of active enemy explosions
+
+
 const enemyImgs = [
   "spaceship_0_1.png",
   "spaceship_0_2.png",
@@ -248,12 +263,18 @@ function update() {
   for (let i = enemies.length - 1; i >= 0; i--) {
     for (let j = bullets.length - 1; j >= 0; j--) {
       if (detectCollision(bullets[j], enemies[i])) {
-        enemies.splice(i, 1);
-        bullets.splice(j, 1);
-        score += 100;
-        const enemyExplosion = new Audio("enemyexplosion.mp3");
-        enemyExplosion.volume = 0.8;
-        enemyExplosion.play();
+       enemyExplosions.push({
+        x: enemies[i].x,
+        y: enemies[i].y,
+        frameIndex: 0
+      });
+      enemies.splice(i, 1);
+      bullets.splice(j, 1);
+      score += 100;
+      const enemyExplosion = new Audio("enemyexplosion.mp3");
+      enemyExplosion.volume = 0.8;
+      enemyExplosion.play();
+
         break;
       }
     }
@@ -276,7 +297,11 @@ function update() {
         gameOver = true;
         playerExplosion.volume = 1.0;
         playerExplosion.play();
-        playerImg.src = ""
+        explosionInProgress = true;
+        explosionFrameIndex = 0;
+        explosionX = player.x;
+        explosionY = player.y;
+
       } else {
         playerRicochet.volume = 0.5;
         playerRicochet.play();
@@ -301,7 +326,11 @@ function update() {
         gameOver = true;
         playerExplosion.volume = 1.0;
         playerExplosion.play();
-        playerImg.src = ""
+        explosionInProgress = true;
+        explosionFrameIndex = 0;
+        explosionX = player.x;
+        explosionY = player.y;
+
       } else {
         playerRicochet.volume = 0.5;
         playerRicochet.play();
@@ -326,20 +355,31 @@ function draw() {
   }
 
   // Draw player
+if (explosionInProgress) {
+  const frame = explosionFrames[explosionFrameIndex];
+  if (frame.complete) {
+    ctx.drawImage(frame, explosionX -84, explosionY -84, player.width * 3, player.height * 3);
+  }
+
+  if (explosionFrameIndex < explosionFrames.length - 1) {
+    explosionFrameIndex++;
+  } else {
+    explosionInProgress = false;
+  }
+} else {
   if (!gameStarted) {
     ctx.drawImage(playerImg, canvas.width / 2 - 24, canvas.height - 70, player.width, player.height);
-
-    // === ADD: Display instructions before game starts ===
     ctx.fillStyle = "#ff7e5f";
     ctx.font = "22px Arial";
     ctx.textAlign = "center";
     ctx.fillText("Controls: ← → to move, SPACE to shoot, P to pause", canvas.width / 2, canvas.height / 2 + 60);
     ctx.font = "26px Arial";
     ctx.fillText("Press SPACE or click Start to begin!", canvas.width / 2, canvas.height / 2 + 100);
-    // ====================================================
-  } else {
+  } else if (!gameOver) {
     ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
   }
+}
+
 
   // Draw bullets
   for (let bullet of bullets) {
@@ -357,6 +397,19 @@ function draw() {
   for (let enemy of enemies) {
     ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
+
+  for (let i = enemyExplosions.length - 1; i >= 0; i--) {
+  const explosion = enemyExplosions[i];
+  const frame = explosionFrames[explosion.frameIndex];
+  if (frame.complete) {
+    ctx.drawImage(frame, explosion.x, explosion.y, 48, 48); // Smaller size
+  }
+  explosion.frameIndex++;
+  if (explosion.frameIndex >= explosionFrames.length) {
+    enemyExplosions.splice(i, 1); // Remove finished explosion
+  }
+}
+
 
   // Draw score and lives
   if (!gameOver) {
