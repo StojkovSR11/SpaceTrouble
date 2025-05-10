@@ -34,7 +34,7 @@ const enemyImgs = [
 // Sounds
 const bgMusic = new Audio("music.mp3");
 bgMusic.loop = true;
-bgMusic.volume = 1;
+bgMusic.volume = 0.3;
 
 // Game state variables
 let gameStarted = false;
@@ -192,7 +192,7 @@ const shootCooldown = 100; // Cooldown time in milliseconds (500ms)
 
 function shoot() {
   const gunSound = new Audio("gun.mp3");
-  gunSound.volume = 0.3;
+  gunSound.volume = 0.1;
   gunSound.play();
   bullets.push({ x: player.x + 33, y: player.y, speed: 7 });
 }
@@ -212,13 +212,17 @@ function spawnEnemy() {
 
 
 function detectCollision(objA, objB) {
+  const shrinkA = { x: 5, y: 5 }; // Shrink hitbox A by 2px width and 4px height (1px per side)
+  const shrinkB = { x: 5, y: 5 }; // Shrink hitbox B similarly
+
   return (
-    objA.x < objB.x + objB.width &&
-    objA.x + 4 > objB.x &&
-    objA.y < objB.y + objB.height &&
-    objA.y + 10 > objB.y
+    objA.x + shrinkA.x < objB.x + objB.width - shrinkB.x &&
+    objA.x + 4 - shrinkA.x > objB.x + shrinkB.x &&
+    objA.y + shrinkA.y < objB.y + objB.height - shrinkB.y &&
+    objA.y + 10 - shrinkA.y > objB.y + shrinkB.y
   );
 }
+
 
 function update() {
   // Move player based on keys pressed
@@ -243,11 +247,11 @@ function update() {
 
   for (let bullet of bullets) bullet.y -= bullet.speed;
   for (let b of enemyBullets) b.y += b.speed;
+
   for (let enemy of enemies) {
-    // Move enemies in a zigzag pattern
-    enemy.x += enemy.direction * 2; // Change 2 for speed of horizontal movement
+    enemy.x += enemy.direction * 2;
     if (enemy.x <= 0 || enemy.x >= canvas.width - enemy.width) {
-      enemy.direction *= -1; // Reverse direction when hitting the screen edges
+      enemy.direction *= -1;
     }
     enemy.y += enemy.speed;
   }
@@ -263,36 +267,39 @@ function update() {
   for (let i = enemies.length - 1; i >= 0; i--) {
     for (let j = bullets.length - 1; j >= 0; j--) {
       if (detectCollision(bullets[j], enemies[i])) {
-       enemyExplosions.push({
-        x: enemies[i].x,
-        y: enemies[i].y,
-        frameIndex: 0
-      });
-      enemies.splice(i, 1);
-      bullets.splice(j, 1);
-      score += 100;
-      const enemyExplosion = new Audio("enemyexplosion.mp3");
-      enemyExplosion.volume = 0.8;
-      enemyExplosion.play();
-
+        enemyExplosions.push({
+          x: enemies[i].x,
+          y: enemies[i].y,
+          frameIndex: 0
+        });
+        enemies.splice(i, 1);
+        bullets.splice(j, 1);
+        score += 100;
+        const enemyExplosion = new Audio("enemyexplosion.mp3");
+        enemyExplosion.volume = 0.8;
+        enemyExplosion.play();
         break;
       }
     }
   }
 
+  // Shrink amount for player's collision box
+  const shrinkX = 15; // 2px on each side = 4px total
+  const shrinkY = 15; // 3px on top and bottom = 6px total
+
   for (let i = enemies.length - 1; i >= 0; i--) {
     const e = enemies[i];
     if (
-      player.x < e.x + e.width &&
-      player.x + player.width > e.x &&
-      player.y < e.y + e.height &&
-      player.y + player.height > e.y
+      player.x + shrinkX < e.x + e.width &&
+      player.x + player.width - shrinkX > e.x &&
+      player.y + shrinkY < e.y + e.height &&
+      player.y + player.height - shrinkY > e.y
     ) {
       enemies.splice(i, 1);
       player.lives -= 1;
       const playerRicochet = new Audio("ricochet.mp3");
       const playerExplosion = new Audio("playerexplosion.mp3");
-      
+
       if (player.lives <= 0) {
         gameOver = true;
         playerExplosion.volume = 1.0;
@@ -301,9 +308,8 @@ function update() {
         explosionFrameIndex = 0;
         explosionX = player.x;
         explosionY = player.y;
-
       } else {
-        playerRicochet.volume = 0.5;
+        playerRicochet.volume = 1;
         playerRicochet.play();
       }
     }
@@ -312,16 +318,16 @@ function update() {
   for (let i = enemyBullets.length - 1; i >= 0; i--) {
     const b = enemyBullets[i];
     if (
-      b.x < player.x + player.width &&
-      b.x + 4 > player.x &&
-      b.y < player.y + player.height &&
-      b.y + 10 > player.y
+      b.x < player.x + player.width - shrinkX &&
+      b.x + 4 > player.x + shrinkX &&
+      b.y < player.y + player.height - shrinkY &&
+      b.y + 10 > player.y + shrinkY
     ) {
       enemyBullets.splice(i, 1);
       player.lives -= 1;
       const playerRicochet = new Audio("ricochet.mp3");
       const playerExplosion = new Audio("playerexplosion.mp3");
-      
+
       if (player.lives <= 0) {
         gameOver = true;
         playerExplosion.volume = 1.0;
@@ -330,14 +336,14 @@ function update() {
         explosionFrameIndex = 0;
         explosionX = player.x;
         explosionY = player.y;
-
       } else {
-        playerRicochet.volume = 0.5;
+        playerRicochet.volume = 1;
         playerRicochet.play();
       }
     }
   }
 }
+
 
 
 function draw() {
@@ -446,10 +452,48 @@ function gameLoop() {
 }
 
 function startEnemySpawning() {
-  setInterval(() => {
-    if (!gameOver && !gamePaused) spawnEnemy();
-  }, 1500);
+  let spawnInterval = 5000;         // time between each *group* spawn
+  const minInterval = 5000;
+  const intervalStep = 20;
+
+  let spawnCount = 0;
+  let enemiesPerCycle = 5;          // start with 5 per cycle
+  const maxEnemiesPerCycle = 15;
+  const increaseEvery = 3;          // increase group size every 3 cycles
+
+  let timerId = null;
+
+  function scheduleNext() {
+    timerId = setTimeout(() => {
+      if (!gameOver && !gamePaused) {
+        // spawn a group of enemies
+        for (let i = 0; i < enemiesPerCycle; i++) {
+          spawnEnemy();
+          spawnCount++;
+        }
+
+        // difficulty increases over time
+        spawnInterval = Math.max(minInterval, spawnInterval - intervalStep);
+        console.log(`Cycle ${spawnCount / enemiesPerCycle}: Spawned ${enemiesPerCycle} enemies. Next in ${spawnInterval}ms`);
+
+        // increase enemies per cycle every few cycles
+        if ((spawnCount / enemiesPerCycle) % increaseEvery === 0 && enemiesPerCycle < maxEnemiesPerCycle) {
+          enemiesPerCycle++;
+          console.log(`Increasing enemies per cycle to ${enemiesPerCycle}`);
+        }
+      }
+
+      // schedule next cycle
+      scheduleNext();
+    }, spawnInterval);
+  }
+
+  scheduleNext();
+
+  return () => clearTimeout(timerId);
 }
+
+
 
 function startEnemyShooting() {
   setInterval(() => {
@@ -458,7 +502,7 @@ function startEnemyShooting() {
       if (Math.random() < 0.2) {
         enemyBullets.push({ x: e.x + 22, y: e.y + 48, speed: 4 });
         const laser = new Audio("laser.mp3");
-        laser.volume = 0.3;
+        laser.volume = 0.1;
         laser.play();
       }
     });
