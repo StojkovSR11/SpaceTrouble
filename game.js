@@ -194,8 +194,52 @@ function shoot() {
   const gunSound = new Audio("gun.mp3");
   gunSound.volume = 0.1;
   gunSound.play();
-  bullets.push({ x: player.x + 33, y: player.y, speed: 7 });
+
+  let shots = 1;
+  if (score >= 3000) {
+    shots = 3;
+  } else if (score >= 1500) {
+    shots = 2;
+  }
+
+  const baseX = player.x + 33;
+  const baseY = player.y;
+  const speed = 7;
+
+  if (shots === 1) {
+    // straight bullet
+    bullets.push({
+      x: baseX,
+      y: baseY,
+      speed: speed,
+      angle: 0 // straight up
+    });
+  } else if (shots === 2) {
+    // two bullets with slight angles
+    const angles = [-5, 5]; // degrees
+    angles.forEach(deg => {
+      bullets.push({
+        x: baseX,
+        y: baseY,
+        speed: speed,
+        angle: deg * (Math.PI / 180)
+      });
+    });
+  } else if (shots === 3) {
+    // three bullets: left, center, right
+    const angles = [-10, 0, 10]; // degrees
+    angles.forEach(deg => {
+      bullets.push({
+        x: baseX,
+        y: baseY,
+        speed: speed,
+        angle: deg * (Math.PI / 180)
+      });
+    });
+  }
 }
+
+
 
 function spawnEnemy() {
   const img = enemyImgs[Math.floor(Math.random() * enemyImgs.length)];
@@ -245,7 +289,12 @@ function update() {
 
   player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
 
-  for (let bullet of bullets) bullet.y -= bullet.speed;
+  for (let bullet of bullets) {
+  const angle = bullet.angle || 0;
+  bullet.x += Math.sin(angle) * bullet.speed;
+  bullet.y -= Math.cos(angle) * bullet.speed;
+}
+
   for (let b of enemyBullets) b.y += b.speed;
 
   for (let enemy of enemies) {
@@ -361,36 +410,36 @@ function draw() {
   }
 
   // Draw player
-if (explosionInProgress) {
-  const frame = explosionFrames[explosionFrameIndex];
-  if (frame.complete) {
-    ctx.drawImage(frame, explosionX -84, explosionY -84, player.width * 3, player.height * 3);
-  }
+  if (explosionInProgress) {
+    const frame = explosionFrames[explosionFrameIndex];
+    if (frame.complete) {
+      ctx.drawImage(frame, explosionX - 84, explosionY - 84, player.width * 3, player.height * 3);
+    }
 
-  if (explosionFrameIndex < explosionFrames.length - 1) {
-    explosionFrameIndex++;
+    if (explosionFrameIndex < explosionFrames.length - 1) {
+      explosionFrameIndex++;
+    } else {
+      explosionInProgress = false;
+    }
   } else {
-    explosionInProgress = false;
+    if (!gameStarted) {
+      ctx.drawImage(playerImg, canvas.width / 2 - 24, canvas.height - 70, player.width, player.height);
+      ctx.fillStyle = "#ff7e5f";
+      ctx.font = "22px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("Controls: ← → to move, SPACE to shoot, P to pause", canvas.width / 2, canvas.height / 2 + 60);
+      ctx.font = "26px Arial";
+      ctx.fillText("Press SPACE or click Start to begin!", canvas.width / 2, canvas.height / 2 + 100);
+    } else if (!gameOver) {
+      ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+    }
   }
-} else {
-  if (!gameStarted) {
-    ctx.drawImage(playerImg, canvas.width / 2 - 24, canvas.height - 70, player.width, player.height);
-    ctx.fillStyle = "#ff7e5f";
-    ctx.font = "22px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("Controls: ← → to move, SPACE to shoot, P to pause", canvas.width / 2, canvas.height / 2 + 60);
-    ctx.font = "26px Arial";
-    ctx.fillText("Press SPACE or click Start to begin!", canvas.width / 2, canvas.height / 2 + 100);
-  } else if (!gameOver) {
-    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
-  }
-}
-
 
   // Draw bullets
+  // Simple draw test for bullets
   for (let bullet of bullets) {
     ctx.fillStyle = "yellow";
-    ctx.fillRect(bullet.x, bullet.y, 4, 10);
+    ctx.fillRect(bullet.x, bullet.y, 4, 10);  // Regular bullet
   }
 
   // Draw enemy bullets
@@ -404,29 +453,58 @@ if (explosionInProgress) {
     ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
 
+  // Draw enemy explosions
   for (let i = enemyExplosions.length - 1; i >= 0; i--) {
-  const explosion = enemyExplosions[i];
-  const frame = explosionFrames[explosion.frameIndex];
-  if (frame.complete) {
-    ctx.drawImage(frame, explosion.x, explosion.y, 48, 48); // Smaller size
+    const explosion = enemyExplosions[i];
+    const frame = explosionFrames[explosion.frameIndex];
+    if (frame.complete) {
+      ctx.drawImage(frame, explosion.x, explosion.y, 48, 48); // Smaller size
+    }
+    explosion.frameIndex++;
+    if (explosion.frameIndex >= explosionFrames.length) {
+      enemyExplosions.splice(i, 1); // Remove finished explosion
+    }
   }
-  explosion.frameIndex++;
-  if (explosion.frameIndex >= explosionFrames.length) {
-    enemyExplosions.splice(i, 1); // Remove finished explosion
-  }
-}
-
 
   // Draw score and lives
   if (!gameOver) {
     ctx.fillStyle = "#ff7e5f";
     ctx.font = "20px Arial";
-    ctx.fillText(`Score: ${score}`, 40, 25);
+    ctx.fillText(`Score: ${score}`, 430, 30);
   }
 
+  // Draw player lives
   for (let i = 0; i < player.lives; i++) {
-    ctx.drawImage(playerImg, 40 + i * 35, 50, 24, 24);
+    ctx.drawImage(playerImg, 40 + i * 35, 10, 24, 24);
   }
+
+// Draw the next weapon label in the top-right corner
+  // Right aligned, under score
+
+// Draw the next weapon as bullets underneath the label
+
+if (score < 1500) {
+  ctx.fillStyle = "#ff7e5f";
+  ctx.font = "20px Arial";
+  ctx.textAlign = "right";
+  ctx.fillText("Next Weapon", canvas.width - 40, 30);
+  // Draw two bullets for double shot
+  ctx.fillStyle = "yellow";
+  ctx.fillRect(canvas.width - 100, 50, 4, 10);  // Left bullet
+  ctx.fillRect(canvas.width - 80, 50, 4, 10);  // Right bullet
+} else if (score < 3000) {
+  ctx.fillStyle = "#ff7e5f";
+  ctx.font = "20px Arial";
+  ctx.textAlign = "right";
+  ctx.fillText("Next Weapon", canvas.width - 40, 25);
+  // Draw three bullets for triple shot
+  ctx.fillStyle = "yellow";
+  ctx.fillRect(canvas.width - 110, 50, 4, 10);  // Left bullet
+  ctx.fillRect(canvas.width - 90, 50, 4, 10);  // Center bullet
+  ctx.fillRect(canvas.width - 70, 50, 4, 10);  // Right bullet
+}
+
+
 
   // Game over display
   if (gameOver) {
@@ -444,6 +522,7 @@ if (explosionInProgress) {
 
 
 
+
 function gameLoop() {
   if (gamePaused) return;
   update();
@@ -454,43 +533,48 @@ function gameLoop() {
 function startEnemySpawning() {
   let spawnInterval = 5000;         // time between each *group* spawn
   const minInterval = 5000;
-  const intervalStep = 20;
+  const intervalStep = 100;
 
   let spawnCount = 0;
-  let enemiesPerCycle = 5;          // start with 5 per cycle
+  let enemiesPerCycle = 1;          // start with 5 per cycle
   const maxEnemiesPerCycle = 15;
   const increaseEvery = 3;          // increase group size every 3 cycles
 
   let timerId = null;
 
-  function scheduleNext() {
-    timerId = setTimeout(() => {
-      if (!gameOver && !gamePaused) {
-        // spawn a group of enemies
-        for (let i = 0; i < enemiesPerCycle; i++) {
-          spawnEnemy();
-          spawnCount++;
-        }
+let spawnCycleCount = 0;
 
-        // difficulty increases over time
-        spawnInterval = Math.max(minInterval, spawnInterval - intervalStep);
-        console.log(`Cycle ${spawnCount / enemiesPerCycle}: Spawned ${enemiesPerCycle} enemies. Next in ${spawnInterval}ms`);
-
-        // increase enemies per cycle every few cycles
-        if ((spawnCount / enemiesPerCycle) % increaseEvery === 0 && enemiesPerCycle < maxEnemiesPerCycle) {
-          enemiesPerCycle++;
-          console.log(`Increasing enemies per cycle to ${enemiesPerCycle}`);
-        }
+function scheduleNext() {
+  timerId = setTimeout(() => {
+    if (!gameOver && !gamePaused) {
+      // spawn a group of enemies
+      for (let i = 0; i < enemiesPerCycle; i++) {
+        spawnEnemy();
+        spawnCount++;
       }
 
-      // schedule next cycle
-      scheduleNext();
-    }, spawnInterval);
-  }
+      spawnCycleCount++;
 
-  scheduleNext();
+      // difficulty increases over time
+      spawnInterval = Math.max(minInterval, spawnInterval - intervalStep);
+      console.log(`Cycle ${spawnCycleCount}: Spawned ${enemiesPerCycle} enemies. Next in ${spawnInterval}ms`);
 
-  return () => clearTimeout(timerId);
+      // increase enemies per cycle every few cycles
+      if (spawnCycleCount % increaseEvery === 0 && enemiesPerCycle < maxEnemiesPerCycle) {
+        enemiesPerCycle++;
+        console.log(`Increasing enemies per cycle to ${enemiesPerCycle}`);
+      }
+    }
+
+    // schedule next cycle
+    scheduleNext();
+  }, spawnInterval);
+}
+
+scheduleNext();
+
+return () => clearTimeout(timerId);
+
 }
 
 
@@ -498,9 +582,14 @@ function startEnemySpawning() {
 function startEnemyShooting() {
   setInterval(() => {
     if (gameOver || gamePaused) return;
+
     enemies.forEach(e => {
-      if (Math.random() < 0.2) {
-        enemyBullets.push({ x: e.x + 22, y: e.y + 48, speed: 4 });
+      const isOnScreen =
+        e.x >= 0 && e.x <= canvas.width &&
+        e.y >= 0 && e.y <= canvas.height;
+
+      if (isOnScreen && Math.random() < 0.7) {
+        enemyBullets.push({ x: e.x + 22, y: e.y + 48, speed: 5 });
         const laser = new Audio("laser.mp3");
         laser.volume = 0.1;
         laser.play();
@@ -508,6 +597,7 @@ function startEnemyShooting() {
     });
   }, 1000);
 }
+
 
 document.getElementById("restartGameBtn").addEventListener("click", restartGame);
 
