@@ -84,14 +84,30 @@ document.addEventListener("keydown", (e) => {
     keysPressed.right = true;
   }
 
-  // Handle shooting (spacebar should only trigger once)
+  // Handle starting the game or pausing/resuming
   if (e.key === " " && !keysPressed.space) {
-    const currentTime = Date.now();
-    if (currentTime - lastShotTime > shootCooldown) {
+    if (!gameStarted || gamePaused) {
+      const currentTime = Date.now();
+      if (currentTime - lastShotTime > shootCooldown) {
+        if (!gameStarted) {
+          startMusic(); // Start the music if the game hasn't started
+          gameStarted = true;
+          gameLoop(); // Start the game loop
+          startEnemySpawning(); // Start spawning enemies
+          startEnemyShooting(); // Start enemy shooting
+          document.getElementById("startGameBtn").textContent = "Pause"; // Change button to Pause
+        } else if (gamePaused) {
+          gamePaused = false; // Unpause the game
+          document.getElementById("startGameBtn").textContent = "Pause"; // Change button text
+          gameLoop(); // Resume the game loop
+        }
+      }
+    } else {
+      // Only shoot if the game has started and it's not paused
       shoot();
-      lastShotTime = currentTime;
-      keysPressed.space = true;  // Lock shooting until spacebar is released
+      lastShotTime = Date.now();
     }
+    keysPressed.space = true; // Lock spacebar until released
     e.preventDefault();  // Prevent default spacebar behavior (scroll, etc)
   }
 
@@ -122,6 +138,7 @@ document.addEventListener("keyup", (e) => {
     keysPressed.space = false;  // Allow shooting again when spacebar is released
   }
 });
+
 
 
 // Player properties
@@ -321,20 +338,30 @@ function draw() {
     ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
 
-  ctx.fillStyle = "#ff7e5f";  // Set color for score and lives
-  ctx.font = "20px Arial";
-  ctx.fillText(`Score: ${score}`, 10, 25);
-  ctx.fillText(`Lives: ${player.lives}`, 10, 50);
+  // Display score and lives only if the game is not over
+  if (!gameOver) {
+    ctx.fillStyle = "#ff7e5f";  // Set color for score and lives
+    ctx.font = "20px Arial";
+    ctx.fillText(`Score: ${score}`, 10, 25);
+    ctx.fillText(`Lives: ${player.lives}`, 10, 50);
+  }
 
   if (gameOver) {
-    // Improved and animated game over message
+    // Show total score when the game is over
     ctx.fillStyle = "#ff7e5f";
     ctx.font = "48px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
+    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 40);  // Move GAME OVER text slightly up
+
+    // Display the total score at the bottom of the screen
+    ctx.font = "30px Arial";
+    ctx.fillText(`Total Score: ${score}`, canvas.width / 2, canvas.height / 2 + 40);  // Show total score below GAME OVER
   }
 }
+
+
+
 
 
 function gameLoop() {
@@ -380,7 +407,7 @@ function restartGame() {
   enemyBullets.length = 0;
 
   document.getElementById("restartGameBtn").style.display = "none";
-  document.getElementById("startGameBtn").style.display = "none";
+  document.getElementById("startGameBtn").style.display = "block";
   document.getElementById("startGameBtn").textContent = "Pause";
   document.getElementById("startGameBtn").blur(); // Prevent spacebar reactivation
 }
