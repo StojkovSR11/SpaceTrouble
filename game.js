@@ -347,20 +347,26 @@ function draw() {
     ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
 
-  // Draw score and lives only if the game is not over
+  // Draw score only if the game is not over
   if (!gameOver) {
     const scoreX = 40;
     const scoreY = 25;
-    const livesX = 40;
-    const livesY = 50;
 
-    // Set color for score and lives
+    // Set color for score
     ctx.fillStyle = "#ff7e5f";
 
-    // Draw score and lives
+    // Draw score
     ctx.font = "20px Arial";
     ctx.fillText(`Score: ${score}`, scoreX, scoreY);
-    ctx.fillText(`Lives: ${player.lives}`, livesX, livesY);
+  }
+
+  // Draw lives using small spaceship icons
+  const livesX = 40;
+  const livesY = 50;
+  const iconSpacing = 35; // Space between the icons
+
+  for (let i = 0; i < player.lives; i++) {
+    ctx.drawImage(playerImg, livesX + i * iconSpacing, livesY, 24, 24); // Adjust the size of the icons
   }
 
   // Display game over screen when the game ends
@@ -377,6 +383,7 @@ function draw() {
     ctx.fillText(`Total Score: ${score}`, canvas.width / 2, canvas.height / 2 + 40);
   }
 }
+
 
 
 
