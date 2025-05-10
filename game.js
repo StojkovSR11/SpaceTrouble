@@ -396,6 +396,7 @@ function update() {
 
 
 function draw() {
+
   // Clear canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "black";
@@ -425,10 +426,10 @@ function draw() {
     if (!gameStarted) {
       ctx.drawImage(playerImg, canvas.width / 2 - 24, canvas.height - 70, player.width, player.height);
       ctx.fillStyle = "#ff7e5f";
-      ctx.font = "22px Arial";
+      ctx.font = "22px Orbitron";
       ctx.textAlign = "center";
       ctx.fillText("Controls: ← → to move, SPACE to shoot, P to pause", canvas.width / 2, canvas.height / 2 + 60);
-      ctx.font = "26px Arial";
+      ctx.font = "26px Orbitron";
       ctx.fillText("Press SPACE or click Start to begin!", canvas.width / 2, canvas.height / 2 + 100);
     } else if (!gameOver) {
       ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
@@ -469,7 +470,7 @@ function draw() {
   // Draw score and lives
   if (!gameOver) {
     ctx.fillStyle = "#ff7e5f";
-    ctx.font = "20px Arial";
+    ctx.font = "20px Orbitron, sans-serif";
     ctx.fillText(`Score: ${score}`, 430, 30);
   }
 
@@ -485,7 +486,7 @@ function draw() {
 
 if (score < 1500) {
   ctx.fillStyle = "#ff7e5f";
-  ctx.font = "20px Arial";
+  ctx.font = "20px Orbitron, sans-serif";
   ctx.textAlign = "right";
   ctx.fillText("Next Weapon", canvas.width - 40, 30);
   // Draw two bullets for double shot
@@ -494,7 +495,7 @@ if (score < 1500) {
   ctx.fillRect(canvas.width - 80, 50, 4, 10);  // Right bullet
 } else if (score < 3000) {
   ctx.fillStyle = "#ff7e5f";
-  ctx.font = "20px Arial";
+  ctx.font = "20px Orbitron, sans-serif";
   ctx.textAlign = "right";
   ctx.fillText("Next Weapon", canvas.width - 40, 25);
   // Draw three bullets for triple shot
@@ -509,10 +510,10 @@ if (score < 1500) {
   // Game over display
   if (gameOver) {
     ctx.fillStyle = "#ff7e5f";
-    ctx.font = "48px Arial";
+    ctx.font = "48px Orbitron, sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 40);
-    ctx.font = "30px Arial";
+    ctx.font = "30px Orbitron, sans-serif";
     ctx.fillText(`Total Score: ${score}`, canvas.width / 2, canvas.height / 2 + 40);
   }
 }
@@ -638,6 +639,10 @@ document.getElementById("toggleMusicBtn").addEventListener("click", () => {
   document.getElementById("toggleMusicBtn").textContent = bgMusic.paused ? "Play Music" : "Pause Music";
 });
 
+
 playerImg.onload = () => {
-  draw(); // This will render the player icon before the game starts
+  document.fonts.load('700 16px Orbitron').then(() => {
+    draw(); // This will render the player icon after font and image are both ready
+  });
 };
+
