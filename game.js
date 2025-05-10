@@ -347,19 +347,21 @@ function draw() {
     ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
 
-  // Fixed position for score and lives (without textAlign and textBaseline)
-  const scoreX = 40;
-  const scoreY = 25;
-  const livesX = 40;
-  const livesY = 50;
+  // Draw score and lives only if the game is not over
+  if (!gameOver) {
+    const scoreX = 40;
+    const scoreY = 25;
+    const livesX = 40;
+    const livesY = 50;
 
-  // Set color for score and lives
-  ctx.fillStyle = "#ff7e5f";  
+    // Set color for score and lives
+    ctx.fillStyle = "#ff7e5f";
 
-  // Draw score and lives
-  ctx.font = "20px Arial";
-  ctx.fillText(`Score: ${score}`, scoreX, scoreY);
-  ctx.fillText(`Lives: ${player.lives}`, livesX, livesY);
+    // Draw score and lives
+    ctx.font = "20px Arial";
+    ctx.fillText(`Score: ${score}`, scoreX, scoreY);
+    ctx.fillText(`Lives: ${player.lives}`, livesX, livesY);
+  }
 
   // Display game over screen when the game ends
   if (gameOver) {
