@@ -203,6 +203,7 @@ function update() {
 
   if (gameOver) {
     document.getElementById("restartGameBtn").style.display = "block";
+    document.getElementById("startGameBtn").style.display = "none";
     return;
   }
 
@@ -320,17 +321,21 @@ function draw() {
     ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
 
-  ctx.fillStyle = "white";
+  ctx.fillStyle = "#ff7e5f";  // Set color for score and lives
   ctx.font = "20px Arial";
   ctx.fillText(`Score: ${score}`, 10, 25);
   ctx.fillText(`Lives: ${player.lives}`, 10, 50);
 
   if (gameOver) {
-    ctx.fillStyle = "red";
+    // Improved and animated game over message
+    ctx.fillStyle = "#ff7e5f";
     ctx.font = "48px Arial";
-    ctx.fillText("GAME OVER", canvas.width / 2 - 130, canvas.height / 2);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
   }
 }
+
 
 function gameLoop() {
   if (gamePaused) return;
@@ -375,6 +380,7 @@ function restartGame() {
   enemyBullets.length = 0;
 
   document.getElementById("restartGameBtn").style.display = "none";
+  document.getElementById("startGameBtn").style.display = "none";
   document.getElementById("startGameBtn").textContent = "Pause";
   document.getElementById("startGameBtn").blur(); // Prevent spacebar reactivation
 }

@@ -2,17 +2,35 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Space Trouble</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <header>
+    <h1>Space Trouble</h1>
+  </header>
 
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
-  <div id="controls">
-    <button id="startGameBtn">Start Game</button>
-    <button id="toggleMusicBtn">Pause Music</button>
-  </div>
-  <button id="restartGameBtn" style="display: none;">Restart Game</button>
+  <main>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+    <div id="controls">
+      <button id="startGameBtn">Start Game</button>
+      <button id="toggleMusicBtn">Pause Music</button>
+      <button id="restartGameBtn" style="display: none;">Restart Game</button>
+    </div>
+    
+    <footer>
+      <p>
+        <a href="https://stojkovsvetozar.onrender.com/" target="_blank" class="link-style"> Svetozar Stojkov</a>
+      </p>
+      <p>
+        <a href="https://github.com/StojkovSR11/SpaceTrouble" target="_blank" class="link-style">Source Code</a>
+      </p>
+    </footer>
+  </main>
+
+  
 
   <script src="game.js" defer></script>
 </body>
