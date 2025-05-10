@@ -312,14 +312,12 @@ function update() {
 
 
 function draw() {
-  // Clear the entire canvas before redrawing
+  // Clear canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Draw the background
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Draw stars (if any)
+  // Draw stars
   ctx.fillStyle = "white";
   for (let star of stars) {
     ctx.beginPath();
@@ -327,8 +325,21 @@ function draw() {
     ctx.fill();
   }
 
-  // Draw the player
-  ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+  // Draw player
+  if (!gameStarted) {
+    ctx.drawImage(playerImg, canvas.width / 2 - 24, canvas.height - 70, player.width, player.height);
+
+    // === ADD: Display instructions before game starts ===
+    ctx.fillStyle = "#ff7e5f";
+    ctx.font = "22px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Controls: ← → to move, SPACE to shoot, P to pause", canvas.width / 2, canvas.height / 2 + 60);
+    ctx.font = "26px Arial";
+    ctx.fillText("Press SPACE or click Start to begin!", canvas.width / 2, canvas.height / 2 + 100);
+    // ====================================================
+  } else {
+    ctx.drawImage(playerImg, player.x, player.y, player.width, player.height);
+  }
 
   // Draw bullets
   for (let bullet of bullets) {
@@ -347,42 +358,29 @@ function draw() {
     ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
   }
 
-  // Draw score only if the game is not over
+  // Draw score and lives
   if (!gameOver) {
-    const scoreX = 40;
-    const scoreY = 25;
-
-    // Set color for score
     ctx.fillStyle = "#ff7e5f";
-
-    // Draw score
     ctx.font = "20px Arial";
-    ctx.fillText(`Score: ${score}`, scoreX, scoreY);
+    ctx.fillText(`Score: ${score}`, 40, 25);
   }
-
-  // Draw lives using small spaceship icons
-  const livesX = 40;
-  const livesY = 50;
-  const iconSpacing = 35; // Space between the icons
 
   for (let i = 0; i < player.lives; i++) {
-    ctx.drawImage(playerImg, livesX + i * iconSpacing, livesY, 24, 24); // Adjust the size of the icons
+    ctx.drawImage(playerImg, 40 + i * 35, 50, 24, 24);
   }
 
-  // Display game over screen when the game ends
+  // Game over display
   if (gameOver) {
-    // GAME OVER screen
     ctx.fillStyle = "#ff7e5f";
     ctx.font = "48px Arial";
-    ctx.textAlign = "center";  // Centered for GAME OVER text
-    ctx.textBaseline = "middle";  // Middle aligned for GAME OVER text
+    ctx.textAlign = "center";
     ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 40);
-
-    // Display total score when game ends
     ctx.font = "30px Arial";
     ctx.fillText(`Total Score: ${score}`, canvas.width / 2, canvas.height / 2 + 40);
   }
 }
+
+
 
 
 
@@ -439,3 +437,7 @@ document.getElementById("toggleMusicBtn").addEventListener("click", () => {
   toggleMusic();
   document.getElementById("toggleMusicBtn").textContent = bgMusic.paused ? "Play Music" : "Pause Music";
 });
+
+playerImg.onload = () => {
+  draw(); // This will render the player icon before the game starts
+};
