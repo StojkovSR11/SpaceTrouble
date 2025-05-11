@@ -34,7 +34,7 @@ const enemyImgs = [
 // Sounds
 const bgMusic = new Audio("music.mp3");
 bgMusic.loop = true;
-bgMusic.volume = 0.3;
+bgMusic.volume = 0.1;
 
 // Game state variables
 let gameStarted = false;
@@ -183,7 +183,7 @@ let score = 0;
 let gameOver = false;
 
 const bullets = [];
-const enemies = [];
+let enemies = [];
 const enemyBullets = [];
 
 // Shooting cooldown
@@ -351,6 +351,7 @@ function update() {
 
       if (player.lives <= 0) {
         gameOver = true;
+        enemies = [];
         playerExplosion.volume = 1.0;
         playerExplosion.play();
         explosionInProgress = true;
@@ -379,6 +380,7 @@ function update() {
 
       if (player.lives <= 0) {
         gameOver = true;
+        enemies = [];
         playerExplosion.volume = 1.0;
         playerExplosion.play();
         explosionInProgress = true;
